@@ -1,6 +1,5 @@
 package com.vasilisasycheva.android.wordlefortwo
 
-import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.children
 import androidx.core.view.marginLeft
+import com.vasilisasycheva.android.wordlefortwo.ui.DEBUG_TAG
 import com.vasilisasycheva.android.wordlefortwo.ui.WordleViewModel
 import com.vasilisasycheva.android.wordlefortwo.ui.guessboard.GuessBoard
 import com.vasilisasycheva.android.wordlefortwo.ui.keyboard.*
@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         btnDone = findViewById(R.id.makeWord)
         guessBoard = findViewById(R.id.guess_board)
         keyBoard = findViewById(R.id.keyboard_view)
+        val lastRow = keyBoard.children.last() as Keyboard.Row
+        val enterKey = lastRow.children.last() as Keyboard.EnterKey
 
         vm.currentRow.observe(this) {
             currentRow = guessBoard.getChildAt(it) as GuessBoard.RowOfSquares
@@ -48,10 +50,12 @@ class MainActivity : AppCompatActivity() {
         vm.squareInFocus.observe(this) {
             squareInd = it
             squareInFocus = currentRow.getChildAt(it) as GuessBoard.Square
+            enterKey.isEnabled = squareInd == 4
+            Log.d(DEBUG_TAG, "enter key enabled state: ${enterKey.isEnabled.toString()}")
         }
         vm.wordCheck.observe(this) {
             if (!it) {
-                makeShortToast("Этого слова нет в словаре")
+                makeShortToast(getString(R.string.no_such_word_in_dict))
             }
         }
         vm.word.observe(this) {
@@ -80,7 +84,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearField() {
-        vm.endRound()
         keyBoard.children.forEach { row ->
             row as Keyboard.Row
             row.children.forEach { it as Key
@@ -93,25 +96,27 @@ class MainActivity : AppCompatActivity() {
                 square as GuessBoard.Square
                 square.setText("")
                 square.setSquareStatus()
-
             }
         }
+        vm.endRound()
     }
 
     private fun notWordState() {
-        score1.visibility = View.GONE
-        score2.visibility = View.GONE
-        guessBoard.visibility = View.GONE
-        keyBoard.visibility = View.GONE
-        btnDone.visibility = View.VISIBLE
+//        score1.visibility = View.GONE
+//        score2.visibility = View.GONE
+//        guessBoard.visibility = View.GONE
+//        keyBoard.visibility = View.GONE
+//        btnDone.visibility = View.VISIBLE
+        keyBoard.isEnabled(false)
     }
 
     private fun withWordState() {
-        score1.visibility = View.VISIBLE
-        score2.visibility = View.VISIBLE
-        guessBoard.visibility = View.VISIBLE
-        keyBoard.visibility = View.VISIBLE
+//        score1.visibility = View.VISIBLE
+//        score2.visibility = View.VISIBLE
+//        guessBoard.visibility = View.VISIBLE
+//        keyBoard.visibility = View.VISIBLE
         btnDone.visibility = View.INVISIBLE
+        keyBoard.isEnabled(true)
     }
 
     private fun createLoseDialog() {
@@ -135,7 +140,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun createSetWordDialog() {
         val etWord = EditText(this)
-
         AlertDialog.Builder(this)
             .setMessage("Загадай слово из пяти букв")
             .setView(etWord)
@@ -177,8 +181,6 @@ class MainActivity : AppCompatActivity() {
             val result = getResultString(squareList)
             if (vm.checkWord(result)) {
                 vm.checkResult(result)
-                vm.checkLoss()
-                vm.nextRow()
             }
             clearSquareList()
         }

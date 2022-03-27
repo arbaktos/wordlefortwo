@@ -1,12 +1,15 @@
 package com.vasilisasycheva.android.wordlefortwo.ui.keyboard
 
 import android.content.Context
+import android.icu.util.Measure
 import android.media.MediaDrm
 import android.os.Build
 import android.util.AttributeSet
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.View.MeasureSpec.getSize
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.appcompat.content.res.AppCompatResources
@@ -14,6 +17,8 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.children
 import com.vasilisasycheva.android.wordlefortwo.R
 import com.vasilisasycheva.android.wordlefortwo.extensions.dpToIntPx
+import com.vasilisasycheva.android.wordlefortwo.extensions.pixelsToSp
+import com.vasilisasycheva.android.wordlefortwo.ui.DEBUG_TAG
 
 
 class Keyboard @JvmOverloads constructor(
@@ -27,7 +32,6 @@ class Keyboard @JvmOverloads constructor(
     var textButtonWidth = 1
     var keyboardClicksInt: KeyboardClicksInt? = null
     var rowHeight = 1
-    var paddingText = 0
 
     init {
         rowList.forEach {
@@ -37,10 +41,17 @@ class Keyboard @JvmOverloads constructor(
         }
     }
 
+    fun isEnabled(isEnabled: Boolean) {
+        this.children.forEach { it as Row
+            it.children.forEach {
+                it.isEnabled = isEnabled
+            }
+        }
+    }
+
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         textButtonWidth = (width - (rowList[0].size * padding + padding)) / rowList[0].size
         rowHeight = textButtonWidth * 2
-        paddingText = (rowHeight - 20) / 2
         var top = 0
         children.forEach {
             it.layout(l, top, r, top + rowHeight)
@@ -53,10 +64,6 @@ class Keyboard @JvmOverloads constructor(
         children.forEach { child ->
             child.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
             usedHeight += child.measuredHeight
-            child.layoutParams.apply {
-                width = textButtonWidth
-                height = rowHeight
-            }
         }
         setMeasuredDimension(widthMeasureSpec, usedHeight + padding)
     }
@@ -68,13 +75,7 @@ class Keyboard @JvmOverloads constructor(
                     is TextKey -> {
                         addView(
                             TextKey(ctx, it.label).apply {
-                                setKeyState()
-                                isClickable = true
-                                elevation = 12f
-                                textSize = ctx.dpToIntPx(7).toFloat()
-                                isAllCaps = true
-                                val padTop = (paddingTop + paddingBottom + textSize) / 2
-                                setPadding(0, padTop.toInt(), 0, 0)
+
 //                                typeface = font
                         })
                     }
@@ -97,13 +98,11 @@ class Keyboard @JvmOverloads constructor(
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             val child =  getChildAt(0)
             child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-            val height = child.measuredHeight * 2 + padding
-
+            val height = child.measuredHeight * 2
             setMeasuredDimension(widthMeasureSpec, height)
         }
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-//            val padTop = ((measuredHeight - textHeight) / 2).toInt()
             val textKeyNum = letterList.count { it is TextKey }
             val width = getWidth() - letterList.size * padding - padding
             val gap = width - textKeyNum * textButtonWidth
@@ -133,18 +132,19 @@ class Keyboard @JvmOverloads constructor(
         , OnClickListener
         , Key {
             init {
-//                val font = Typeface.createFromAsset(ctx.assets, "robotobold.ttf")
                 setOnClickListener(this)
                 text = label
                 gravity = Gravity.CENTER
-//                val fm = textMetricsParams.textPaint.fontMetrics
-//                val textHeight: Float = fm.descent - fm.ascent
-
+                setKeyState()
+                isClickable = true
+                elevation = 12f
+                textSize = ctx.dpToIntPx(8).toFloat()
+                isAllCaps = true
+                setPadding(0, padding * 2, 0, 0)
             }
 
         fun setKeyState(guessState: GuessState = GuessState.Default) {
             background = AppCompatResources.getDrawable(ct, guessState.keyColor)
-            invalidate()
         }
 
         override fun onClick(v: View?) {
@@ -160,7 +160,7 @@ class Keyboard @JvmOverloads constructor(
                 setOnClickListener(this)
                 setImageResource(imageRes)
                 scaleType = ScaleType.CENTER_INSIDE
-                background = ct.getDrawable(R.drawable.grey_bg)
+                background = ct.getDrawable(R.drawable.btn_bg_pressed)
             }
 
         override fun onClick(v: View?) {
@@ -172,13 +172,12 @@ class Keyboard @JvmOverloads constructor(
         OnClickListener,
         Key
     {
-
         init {
             setOnClickListener(this)
             text = "ВВОД"
-            background = ct.getDrawable(R.drawable.grey_bg)
+            background = ct.getDrawable(R.drawable.btn_bg_pressed)
             gravity = Gravity.CENTER
-            setPadding(0, 45, 0, 0)
+            setPadding(0, 25, 0, 0)
         }
 
         override fun onClick(v: View?) {
@@ -244,7 +243,7 @@ class Keyboard @JvmOverloads constructor(
 interface Key
 
 enum class GuessState(val keyColor: Int, val etColor: Int) {
-    Default(R.drawable.grey_bg, R.drawable.et_bg),
+    Default(R.drawable.btn_bg_pressed, R.drawable.et_bg),
     Positionmatch(R.drawable.position_match_bg, R.drawable.et_pos_match_bg),
     Charmatch(R.drawable.char_match_bg, R.drawable.et_char_match_bg),
     Miss(R.drawable.miss_bg, R.drawable.et_miss_bg)
