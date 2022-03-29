@@ -60,7 +60,7 @@ class Keyboard @JvmOverloads constructor(
             child.measure(widthMeasureSpec, heightMeasureSpec)//View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
             usedHeight += child.measuredHeight + padding
         }
-        setMeasuredDimension(widthMeasureSpec, usedHeight + padding)
+        setMeasuredDimension(widthMeasureSpec, usedHeight)
     }
 
     inner class Row(private val ctx: Context, private val letterList: List<Key>): ViewGroup(ctx, null, 0) {
