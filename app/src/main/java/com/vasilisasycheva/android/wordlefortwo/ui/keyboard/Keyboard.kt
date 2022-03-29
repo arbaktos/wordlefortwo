@@ -1,23 +1,17 @@
 package com.vasilisasycheva.android.wordlefortwo.ui.keyboard
 
 import android.content.Context
-import android.icu.util.Measure
-import android.media.MediaDrm
-import android.os.Build
 import android.util.AttributeSet
 import android.util.Log
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.View.MeasureSpec.getSize
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.children
 import com.vasilisasycheva.android.wordlefortwo.R
 import com.vasilisasycheva.android.wordlefortwo.extensions.dpToIntPx
-import com.vasilisasycheva.android.wordlefortwo.extensions.pixelsToSp
 import com.vasilisasycheva.android.wordlefortwo.ui.DEBUG_TAG
 
 
@@ -29,9 +23,11 @@ class Keyboard @JvmOverloads constructor(
 
     private val rowList: List<List<Key>> = getRuKeyboard()
     val padding = 10
-    var textButtonWidth = 1
+    var textButtonWidth = 0
     var keyboardClicksInt: KeyboardClicksInt? = null
-    var rowHeight = 1
+    var rowHeight = 0
+    var keyboardWidth = 0
+    var llSize = 0
 
     init {
         rowList.forEach {
@@ -50,8 +46,6 @@ class Keyboard @JvmOverloads constructor(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        textButtonWidth = (width - (rowList[0].size * padding + padding)) / rowList[0].size
-        rowHeight = textButtonWidth * 2
         var top = 0
         children.forEach {
             it.layout(l, top, r, top + rowHeight)
@@ -60,23 +54,27 @@ class Keyboard @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        this.keyboardWidth = getSize(widthMeasureSpec)
         var usedHeight = 0
         children.forEach { child ->
-            child.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-            usedHeight += child.measuredHeight
+            child.measure(widthMeasureSpec, heightMeasureSpec)//View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+            usedHeight += child.measuredHeight + padding
         }
         setMeasuredDimension(widthMeasureSpec, usedHeight + padding)
     }
 
     inner class Row(private val ctx: Context, private val letterList: List<Key>): ViewGroup(ctx, null, 0) {
         init {
+
             letterList.forEach {
                 when (it) {
                     is TextKey -> {
                         addView(
                             TextKey(ctx, it.label).apply {
-
-//                                typeface = font
+                                /* llsize is used to calculate text buttons width
+                                * to calculate correct size we need to take maximum number of buttons in a row
+                                * so we take the largest row*/
+                                if (llSize < letterList.size) llSize = letterList.size
                         })
                     }
                     is BackSpaceKey -> {
@@ -86,10 +84,8 @@ class Keyboard @JvmOverloads constructor(
                     }
                     is EnterKey -> {
                         addView(
-                            EnterKey(ctx).apply {
-//                                typeface = font
-                        })
-
+                            EnterKey(ctx, it.label)
+                        )
                     }
                 }
             }
@@ -98,14 +94,14 @@ class Keyboard @JvmOverloads constructor(
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             val child =  getChildAt(0)
             child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-            val height = child.measuredHeight * 2
-            setMeasuredDimension(widthMeasureSpec, height)
+            val heightRow = child.measuredHeight
+            setMeasuredDimension(widthMeasureSpec, heightRow)
         }
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
             val textKeyNum = letterList.count { it is TextKey }
-            val width = getWidth() - letterList.size * padding - padding
-            val gap = width - textKeyNum * textButtonWidth
+            val emptyWidth = width - letterList.size * padding - padding // empty space in a row
+            val gap = emptyWidth - textKeyNum * textButtonWidth
             var left = if (gap < padding || children.first() !is TextKey) padding else gap/2
             val bottom = rowHeight
 
@@ -131,16 +127,18 @@ class Keyboard @JvmOverloads constructor(
         : androidx.appcompat.widget.AppCompatButton(ct, null, 0)
         , OnClickListener
         , Key {
+
+
             init {
                 setOnClickListener(this)
                 text = label
                 gravity = Gravity.CENTER
-                setKeyState()
+                setKeyState(GuessState.Default)
                 isClickable = true
                 elevation = 12f
                 textSize = ctx.dpToIntPx(8).toFloat()
                 isAllCaps = true
-                setPadding(0, padding * 2, 0, 0)
+
             }
 
         fun setKeyState(guessState: GuessState = GuessState.Default) {
@@ -148,7 +146,19 @@ class Keyboard @JvmOverloads constructor(
         }
 
         override fun onClick(v: View?) {
-            keyboardClicksInt?.onTextClick(this)
+//            keyboardClicksInt?.onTextClick(this)
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            textButtonWidth = (this@Keyboard.keyboardWidth - (llSize * padding + padding)) / llSize
+            rowHeight = textButtonWidth * 2
+            setMeasuredDimension(textButtonWidth, rowHeight)
+        }
+
+        override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+            val paddingVert = (rowHeight - textSize.toInt() - paddingTop - paddingBottom - padding*2) / 2
+            setPadding(0, paddingVert, 0, paddingVert)
+            super.onLayout(changed, left, top, right, bottom)
         }
     }
 
@@ -166,22 +176,31 @@ class Keyboard @JvmOverloads constructor(
         override fun onClick(v: View?) {
             keyboardClicksInt?.onBackspaceClick()
         }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            setMeasuredDimension(widthMeasureSpec, rowHeight)
+        }
     }
 
-    inner class EnterKey(ct: Context): AppCompatButton(ctx, null, 0),
+    inner class EnterKey(ct: Context, val label: String): AppCompatButton(ctx, null, 0),
         OnClickListener,
         Key
     {
         init {
             setOnClickListener(this)
-            text = "ВВОД"
+            text = label
             background = ct.getDrawable(R.drawable.btn_bg_pressed)
             gravity = Gravity.CENTER
-            setPadding(0, 25, 0, 0)
         }
 
         override fun onClick(v: View?) {
             keyboardClicksInt?.onEnterClick()
+        }
+
+        override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+            val paddingVert = (rowHeight - textSize.toInt() - paddingTop - paddingBottom - padding*2) / 2
+            setPadding(0, paddingVert, 0, paddingVert)
+            super.onLayout(changed, left, top, right, bottom)
         }
     }
 
@@ -233,7 +252,7 @@ class Keyboard @JvmOverloads constructor(
             TextKey(ctx, "ь"),
             TextKey(ctx, "б"),
             TextKey(ctx, "ю"),
-            EnterKey(ctx)
+            EnterKey(ctx, "ВВОД")
         )
         )
     }
