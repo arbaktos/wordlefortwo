@@ -8,9 +8,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="grey">#BFBFBF</color>
-    <color name="position_match">#86B049</color>
-    <color name="char_match">#e4cd05</color>
+    <color name="grey_disabled">#50BFBFBF</color>
+    <color name="position_match">#228B22</color>
+    <color name="char_match">#E4D00A</color>
     <color name="miss">#7e7e7e</color>
     <color name="etStroke">#6f6f6f</color>
     <color name="button_pressed">#7f7f7f</color>
+    <color name="dark_grey">#565656</color>
 </resources>

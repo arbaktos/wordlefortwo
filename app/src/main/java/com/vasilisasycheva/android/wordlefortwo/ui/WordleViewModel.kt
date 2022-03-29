@@ -49,7 +49,7 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun nextRow() {
+    private fun nextRow() {
         currentRow.value?.let { index ->
             if (index < 5) {
                 currentRow.value = index + 1
@@ -59,23 +59,24 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun checkWord(result: String): Boolean {
-//        var isOk = false
-//        getApplication<Application>()
-//            .assets
-//            .open(FILE_NAME)
-//            .reader()
-//            .forEachLine {
-//                if (result == it.uppercase()) isOk = true
-//            }
-//        wordCheck.value = isOk
-//        return isOk
-        return true
+        var isOk = false
+        getApplication<Application>()
+            .assets
+            .open(FILE_NAME)
+            .reader()
+            .forEachLine {
+                if (result == it.uppercase()) isOk = true
+            }
+        wordCheck.value = isOk
+        Log.d(DEBUG_TAG, "word is ok: $isOk")
+        return isOk
     }
 
     fun checkResult(result: String) {
         val posMatch: MutableMap<Int, Char> = mutableMapOf()
         val charMatch: MutableMap<Int, Char> = mutableMapOf()
         val miss: MutableMap<Int, Char> = mutableMapOf()
+
         result.forEachIndexed { ind, char ->
             when (char) {
                 wordToGuess.value!![ind] -> {
@@ -94,7 +95,12 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
             GuessState.Positionmatch to posMatch,
             GuessState.Charmatch to charMatch
         )
+        checkWin(posMatch)
+        checkLoss()
+        nextRow()
+    }
 
+    private fun checkWin(posMatch: MutableMap<Int, Char>) {
         if (posMatch.size == 5) {
             isWin.value = true
             increaseScore()
@@ -102,9 +108,10 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun checkLoss() {
-
-        if (!isWin.value!! && currentRow.value == 5) isLost.value = true
+    private fun checkLoss() {
+        if (!isWin.value!! && currentRow.value == 5) {
+            isLost.value = true
+        }
     }
 
     private fun changePlayer() {
@@ -131,7 +138,6 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
                 player2.value!!.score?.let { score ->
                     player2.value = player2.value!!.copy(score = score + 1)
                 }
-
             }
         }
     }
@@ -139,6 +145,8 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
     fun endRound() {
         wordToGuess.value = ""
         isWin.value = false
+        currentRow.value = 0
+        squareInFocus.value = 0
     }
 
 //    private fun updatePlayer(player: MutableLiveData<Player>, update: (currentState: Player) -> Player) {
