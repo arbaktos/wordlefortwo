@@ -73,7 +73,7 @@ class Keyboard @JvmOverloads constructor(
                             TextKey(ctx, it.label).apply {
                                 /* llsize is used to calculate text buttons width
                                 * to calculate correct size we need to take maximum number of buttons in a row
-                                * so we take the largest row*/
+                                * so we calculate the narrowest text button as standard*/
                                 if (llSize < letterList.size) llSize = letterList.size
                         })
                     }
@@ -146,7 +146,7 @@ class Keyboard @JvmOverloads constructor(
         }
 
         override fun onClick(v: View?) {
-//            keyboardClicksInt?.onTextClick(this)
+            keyboardClicksInt?.onTextClick(this)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -171,6 +171,7 @@ class Keyboard @JvmOverloads constructor(
                 setImageResource(imageRes)
                 scaleType = ScaleType.CENTER_INSIDE
                 background = ct.getDrawable(R.drawable.btn_bg_pressed)
+//                if (!isEnabled) setColorFilter(ct.resources.getColor(R.color.position_match))
             }
 
         override fun onClick(v: View?) {

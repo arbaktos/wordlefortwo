@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var currentRow: GuessBoard.RowOfSquares
     lateinit var squareInFocus: GuessBoard.Square
     lateinit var guessBoard: GuessBoard
-//    lateinit var keyBoard: Keyboard
+    lateinit var keyBoard: Keyboard
     lateinit var score1: TextView
     lateinit var score2: TextView
     lateinit var btnDone: AppCompatButton
@@ -39,9 +39,9 @@ class MainActivity : AppCompatActivity() {
         score2 = findViewById(R.id.player2)
         btnDone = findViewById(R.id.makeWord)
         guessBoard = findViewById(R.id.guess_board)
-//        keyBoard = findViewById(R.id.keyboard_view)
-//        val lastRow = keyBoard.children.last() as Keyboard.Row
-//        val enterKey = lastRow.children.last() as Keyboard.EnterKey
+        keyBoard = findViewById(R.id.keyboard_view)
+        val lastRow = keyBoard.children.last() as Keyboard.Row
+        val enterKey = lastRow.children.last() as Keyboard.EnterKey
 
         vm.currentRow.observe(this) {
             currentRow = guessBoard.getChildAt(it) as GuessBoard.RowOfSquares
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
         vm.squareInFocus.observe(this) {
             squareInd = it
             squareInFocus = currentRow.getChildAt(it) as GuessBoard.Square
-//            enterKey.isEnabled = squareInd == 4
+            enterKey.isEnabled = squareInd == 4
 //            Log.d(DEBUG_TAG, "enter key enabled state: ${enterKey.isEnabled.toString()}")
         }
         vm.wordCheck.observe(this) {
@@ -83,12 +83,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearField() {
-//        keyBoard.children.forEach { row ->
-//            row as Keyboard.Row
-//            row.children.forEach { it as Key
-//                if (it is Keyboard.TextKey) it.setKeyState()
-//            }
-//        }
+        keyBoard.children.forEach { row ->
+            row as Keyboard.Row
+            row.children.forEach { it as Key
+                if (it is Keyboard.TextKey) it.setKeyState()
+            }
+        }
         guessBoard.children.forEach { row ->
             row as GuessBoard.RowOfSquares
             row.children.forEach { square ->
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 //        guessBoard.visibility = View.GONE
 //        keyBoard.visibility = View.GONE
 //        btnDone.visibility = View.VISIBLE
-//        keyBoard.isEnabled(false)
+        keyBoard.isEnabled(false)
     }
 
     private fun withWordState() {
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
 //        guessBoard.visibility = View.VISIBLE
 //        keyBoard.visibility = View.VISIBLE
         btnDone.visibility = View.INVISIBLE
-//        keyBoard.isEnabled(true)
+        keyBoard.isEnabled(true)
     }
 
     private fun createLoseDialog() {
@@ -149,15 +149,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     inner class KeyboardClicksIntImpl: KeyboardClicksInt {
-        override fun onTextClick(v: RowTest.TextKey) {
-//            if (squareInFocus.text.isNullOrBlank()) {
-//                squareInFocus.setText(v.label.uppercase())
-//                resultKeys.add(v)
-//            } else {
-//                vm.squareFocusForward()
-//            }
-//            vm.squareFocusForward()
-//            resultKeys.add(v)
+        override fun onTextClick(v: Keyboard.TextKey) {
+            if (squareInFocus.text.isNullOrBlank()) {
+                squareInFocus.setText(v.label.uppercase())
+                resultKeys.add(v)
+            } else {
+                vm.squareFocusForward()
+            }
+            vm.squareFocusForward()
+            resultKeys.add(v)
         }
 
         override fun onBackspaceClick() {
@@ -219,8 +219,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupKeyboard() {
-//        val keyboard = findViewById<Keyboard>(R.id.keyboard_view)
-//        keyboard.setupKeyboardClicks(KeyboardClicksIntImpl())
+        val keyboard = findViewById<Keyboard>(R.id.keyboard_view)
+        keyboard.setupKeyboardClicks(KeyboardClicksIntImpl())
     }
 
     private fun getResultString(result: List<GuessBoard.Square>): String {
