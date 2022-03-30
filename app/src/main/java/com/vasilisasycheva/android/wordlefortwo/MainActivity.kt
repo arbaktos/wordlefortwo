@@ -57,8 +57,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
         vm.word.observe(this) {
-//            if (it.isNullOrEmpty()) notWordState()
-//            else withWordState()
+            if (it.isNullOrEmpty()) notWordState()
+            else withWordState()
         }
         vm.checkResult.observe(this) {
             displayCheckResults(it)
