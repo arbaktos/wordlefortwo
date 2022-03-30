@@ -13,8 +13,7 @@ const val FILE_NAME = "shortwordslist.txt"
 const val DEBUG_TAG = "wordle_debug"
 class WordleViewModel(application: Application) : AndroidViewModel(application) {
 
-
-    private var wordToGuess = MutableLiveData("")
+    private var wordToGuess = MutableLiveData("киоск")
     val word:LiveData<String> = wordToGuess
     val currentRow: MutableLiveData<Int> = MutableLiveData(0)
     val squareInFocus: MutableLiveData<Int> = MutableLiveData(0)

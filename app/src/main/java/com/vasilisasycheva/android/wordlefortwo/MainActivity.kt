@@ -2,7 +2,6 @@ package com.vasilisasycheva.android.wordlefortwo
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -11,9 +10,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.children
-import com.vasilisasycheva.android.wordlefortwo.ui.DEBUG_TAG
 import com.vasilisasycheva.android.wordlefortwo.ui.WordleViewModel
 import com.vasilisasycheva.android.wordlefortwo.ui.guessboard.GuessBoard
+import com.vasilisasycheva.android.wordlefortwo.ui.guessboard.RowSeparate
 import com.vasilisasycheva.android.wordlefortwo.ui.keyboard.*
 
 class MainActivity : AppCompatActivity() {
@@ -58,8 +57,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
         vm.word.observe(this) {
-            if (it.isNullOrEmpty()) notWordState()
-            else withWordState()
+//            if (it.isNullOrEmpty()) notWordState()
+//            else withWordState()
         }
         vm.checkResult.observe(this) {
             displayCheckResults(it)
@@ -101,26 +100,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun notWordState() {
-//        score1.visibility = View.GONE
-//        score2.visibility = View.GONE
-//        guessBoard.visibility = View.GONE
-//        keyBoard.visibility = View.GONE
-//        btnDone.visibility = View.VISIBLE
         keyBoard.isEnabled(false)
     }
 
     private fun withWordState() {
-//        score1.visibility = View.VISIBLE
-//        score2.visibility = View.VISIBLE
-//        guessBoard.visibility = View.VISIBLE
-//        keyBoard.visibility = View.VISIBLE
         btnDone.visibility = View.INVISIBLE
         keyBoard.isEnabled(true)
     }
 
     private fun createLoseDialog() {
         AlertDialog.Builder(this)
-            .setMessage("Вы не отгадали слово(")
+            .setMessage("Вы не отгадали слово :(")
             .setMessage("Слово этого раунда: ${vm.word.value}")
             .setPositiveButton("ОК") { _, _ ->
                 clearField()
@@ -139,6 +129,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun createSetWordDialog() {
         val etWord = EditText(this)
+//        val setWordRow = RowSeparate(this)
         AlertDialog.Builder(this)
             .setMessage("Загадай слово из пяти букв")
             .setView(etWord)
