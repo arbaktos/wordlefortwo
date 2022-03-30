@@ -1,6 +1,7 @@
 package com.vasilisasycheva.android.wordlefortwo.ui.guessboard
 
 import android.content.Context
+import android.graphics.Typeface
 import android.text.InputFilter
 import android.util.AttributeSet
 import android.view.Gravity
@@ -89,6 +90,7 @@ class GuessBoard@JvmOverloads constructor(
             showSoftInputOnFocus = false
             isCursorVisible = false
             isFocusableInTouchMode = false
+            setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
         }
 
         override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {

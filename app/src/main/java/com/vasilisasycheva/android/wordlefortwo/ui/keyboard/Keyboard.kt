@@ -1,18 +1,18 @@
 package com.vasilisasycheva.android.wordlefortwo.ui.keyboard
 
 import android.content.Context
+import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.View.MeasureSpec.getSize
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatButton
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.children
 import com.vasilisasycheva.android.wordlefortwo.R
 import com.vasilisasycheva.android.wordlefortwo.extensions.dpToIntPx
-import com.vasilisasycheva.android.wordlefortwo.ui.DEBUG_TAG
 
 
 class Keyboard @JvmOverloads constructor(
@@ -128,7 +128,6 @@ class Keyboard @JvmOverloads constructor(
         , OnClickListener
         , Key {
 
-
             init {
                 setOnClickListener(this)
                 text = label
@@ -138,7 +137,7 @@ class Keyboard @JvmOverloads constructor(
                 elevation = 12f
                 textSize = ctx.dpToIntPx(8).toFloat()
                 isAllCaps = true
-
+                setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
             }
 
         fun setKeyState(guessState: GuessState = GuessState.Default) {
@@ -192,6 +191,7 @@ class Keyboard @JvmOverloads constructor(
             text = label
             background = ct.getDrawable(R.drawable.btn_bg_pressed)
             gravity = Gravity.CENTER
+            typeface = Typeface.MONOSPACE
         }
 
         override fun onClick(v: View?) {
