@@ -10,7 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.children
-import com.vasilisasycheva.android.wordlefortwo.ui.WordleViewModel
+import com.vasilisasycheva.android.wordlefortwo.domain.WordleViewModel
 import com.vasilisasycheva.android.wordlefortwo.ui.guessboard.GuessBoard
 import com.vasilisasycheva.android.wordlefortwo.ui.guessboard.RowSeparate
 import com.vasilisasycheva.android.wordlefortwo.ui.keyboard.*

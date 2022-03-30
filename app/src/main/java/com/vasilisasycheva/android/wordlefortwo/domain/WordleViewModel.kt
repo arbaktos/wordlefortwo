@@ -1,4 +1,4 @@
-package com.vasilisasycheva.android.wordlefortwo.ui
+package com.vasilisasycheva.android.wordlefortwo.domain
 
 import android.app.Application
 import android.util.Log
@@ -13,7 +13,7 @@ const val FILE_NAME = "shortwordslist.txt"
 const val DEBUG_TAG = "wordle_debug"
 class WordleViewModel(application: Application) : AndroidViewModel(application) {
 
-    private var wordToGuess = MutableLiveData("киоск")
+    private var wordToGuess = MutableLiveData("")
     val word:LiveData<String> = wordToGuess
     val currentRow: MutableLiveData<Int> = MutableLiveData(0)
     val squareInFocus: MutableLiveData<Int> = MutableLiveData(0)
