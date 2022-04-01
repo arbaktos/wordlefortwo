@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity() {
             squareInd = it
             squareInFocus = currentRow.getChildAt(it) as GuessBoard.Square
             enterKey.isEnabled = squareInd == 4
-//            Log.d(DEBUG_TAG, "enter key enabled state: ${enterKey.isEnabled.toString()}")
         }
         vm.wordCheck.observe(this) {
             if (!it) {
@@ -57,8 +56,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
         vm.word.observe(this) {
-            if (it.isNullOrEmpty()) notWordState()
-            else withWordState()
+//            if (it.isNullOrEmpty()) notWordState()
+//            else withWordState()
         }
         vm.checkResult.observe(this) {
             displayCheckResults(it)
@@ -185,26 +184,31 @@ class MainActivity : AppCompatActivity() {
     private fun displayCheckResults(checkResult: Map<GuessState, MutableMap<Int, Char>>) {
         resultKeys.forEach { textKey ->
             when(textKey.label.uppercase().first()) {
-                in checkResult[GuessState.Positionmatch]!!.values -> textKey.setKeyState(GuessState.Positionmatch)//must be last?
-                in checkResult[GuessState.Charmatch]!!.values -> textKey.setKeyState(GuessState.Charmatch)
+                in checkResult[GuessState.Positionmatch]!!.values -> textKey.setKeyState(
+                    GuessState.Positionmatch)//must be last?
+                in checkResult[GuessState.Charmatch]!!.values -> textKey.setKeyState(
+                    GuessState.Charmatch)
                 in checkResult[GuessState.Miss]!!.values -> textKey.setKeyState(GuessState.Miss)
             }
         }
 
         checkResult[GuessState.Miss]?.let { missMap ->
             missMap.forEach { (ind, char) ->
-                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(GuessState.Miss)
+                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
+                    GuessState.Miss)
             }
         }
 
         checkResult[GuessState.Charmatch]?.let { charMatchMap ->
             charMatchMap.forEach { (ind, char) ->
-                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(GuessState.Charmatch)
+                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
+                    GuessState.Charmatch)
             }
         }
         checkResult[GuessState.Positionmatch]?.let { posMatchMap ->
             posMatchMap.forEach { (ind, char) ->
-                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(GuessState.Positionmatch)
+                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
+                    GuessState.Positionmatch)
             }
         }
     }
