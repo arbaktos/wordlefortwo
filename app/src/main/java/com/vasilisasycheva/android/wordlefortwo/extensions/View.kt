@@ -5,6 +5,7 @@ import android.animation.AnimatorSet
 import android.content.Context
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.appcompat.content.res.AppCompatResources
 import com.vasilisasycheva.android.wordlefortwo.R
 
@@ -32,4 +33,9 @@ fun View.flipAnimation(keyColor: Int, ct: Context) {
     } catch (e: Exception) {
         Log.e("e", e.toString())
     }
+}
+
+fun View.shake() {
+    val shakeAnim = AnimationUtils.loadAnimation(this.context, R.anim.shake)
+    this.startAnimation(shakeAnim)
 }

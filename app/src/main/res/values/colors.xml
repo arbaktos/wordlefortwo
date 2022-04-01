@@ -9,8 +9,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="grey">#BFBFBF</color>
     <color name="grey_disabled">#50BFBFBF</color>
-    <color name="position_match">#228B22</color>
-    <color name="char_match">#E4D00A</color>
+    <color name="position_match">#378805</color>
+    <color name="char_match">#DAC17C</color>
     <color name="miss">#7e7e7e</color>
     <color name="etStroke">#6f6f6f</color>
     <color name="button_pressed">#7f7f7f</color>
