@@ -7,8 +7,10 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View.MeasureSpec.getSize
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import androidx.core.view.children
 import com.vasilisasycheva.android.wordlefortwo.R
+import com.vasilisasycheva.android.wordlefortwo.extensions.flipAnimation
 import com.vasilisasycheva.android.wordlefortwo.extensions.pixelsToSp
 import com.vasilisasycheva.android.wordlefortwo.ui.keyboard.GuessState
 
@@ -79,6 +81,8 @@ class GuessBoard@JvmOverloads constructor(
                 left += squareWidth + padding
             }
         }
+
+
     }
 
     inner class Square(private val ctx: Context): androidx.appcompat.widget.AppCompatEditText(ctx, null, 0) {
@@ -102,8 +106,9 @@ class GuessBoard@JvmOverloads constructor(
             super.onLayout(changed, left, top, right, bottom)
         }
 
-        fun setSquareStatus(status: GuessState = GuessState.Default) {
-            this.background = ctx.getDrawable(status.etColor)
+        fun setSquareStatus(guessState: GuessState = GuessState.Default) {
+//            this.background = ctx.getDrawable(status.etColor)
+            this.flipAnimation(guessState.etColor, ctx)
         }
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
