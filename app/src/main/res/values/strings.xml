@@ -5,9 +5,8 @@
     <string name="icon"> Icon by Rakib Hassan Rahim</string>
     <string name="make_a_word">Загадать слово</string>
     <string name="no_such_word_in_dict">Этого слова нет в словаре</string>
-    <string name="loss_message">Вы не отгадали слово :(</string>
     <string name="ok">ОК</string>
-    <string name="loss_message_part2">Слово этого раунда:</string>
+    <string name="loss_message">Вы не отгадали слово :(\nСлово этого раунда:</string>
     <string name="win_message">Слово отгадано!</string>
     <string name="make_a_word_dialog">Загадайте слово из пяти букв</string>
     <string name="done">Готово</string>

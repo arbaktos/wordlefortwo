@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         setupGuessBoard()
 
         vm.gbState.observe(this) { gbState ->
-            setupCurrentRow(gbState.currentRow, enterKey)
+            setupCurrentRow(gbState.currentRow)
             setCurrentSquare(gbState.squareInFocus)
             checkEnterKeyState()
         }
@@ -56,18 +56,14 @@ class MainActivity : AppCompatActivity() {
                 displayCheckResults(uiState.checkResult) //? kind of ugly
             displayWin(uiState.isWin)
             createLoseDialog(uiState.isLost)
+            if (!uiState.wordCheck && uiState.wordToGuess.isNotEmpty()) {
+                currentRow.shake()
+            }
         }
 
         vm.sState.observe(this) { scoreState ->
             score1.text = scoreState.player1.score.toString()
             score2.text = scoreState.player2.score.toString()
-        }
-
-        btnDone.setOnClickListener { createSetWordDialog() }
-        vm.wordCheck.observe(this) {
-            if (!it) {
-                currentRow.shake()
-            }
         }
     }
 
@@ -81,23 +77,29 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun checkEnterKeyState() {
-        enterKey.isEnabled = checkIfRowIsFull() && squareInd == 4
-    }
-
-    private fun setupCurrentRow(rowInd: Int, enterKey: Keyboard.EnterKey) {
+    private fun setupCurrentRow(rowInd: Int) {
         currentRow = guessBoard.getChildAt(rowInd) as GuessBoard.RowOfSquares
         val lastSquare = currentRow.getChildAt(4) as GuessBoard.Square
         lastSquare.addTextChangedListener(object : TextWatcher {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 checkEnterKeyState()
             }
-
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun afterTextChanged(s: Editable?) {}
-
         })
+    }
+
+    private fun checkEnterKeyState() {
+        enterKey.isEnabled = checkIfRowIsFull() && squareInd == 4
+    }
+
+    private fun checkIfRowIsFull(): Boolean {
+        var result = ""
+        currentRow.children.forEach {
+            it as GuessBoard.Square
+            result += it.text.toString()
+        }
+        return result.length == 5
     }
 
     private fun clearField() {
@@ -119,16 +121,6 @@ class MainActivity : AppCompatActivity() {
         vm.endRound()
     }
 
-    private fun checkIfRowIsFull(): Boolean {
-        var result = ""
-        currentRow.children.forEach {
-            it as GuessBoard.Square
-//            if (it.text.isNullOrEmpty()) makeShortToast("Загадайте слово из пяти букв")
-            result += it.text.toString()
-        }
-        return result.length == 5
-    }
-
     private fun isWordSet(isSet: Boolean) {
         if (isSet) btnDone.visibility = View.INVISIBLE
         else btnDone.visibility = View.VISIBLE
@@ -136,11 +128,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createLoseDialog(lost: Boolean) {
-        val message = getString(R.string.loss_message_part2)
         if (lost) {
             AlertDialog.Builder(this)
-                .setMessage(getString(R.string.loss_message))
-                .setMessage("$message ${currentRoundState?.wordToGuess}")
+                .setMessage(getString(R.string.loss_message) + " ${currentRoundState?.wordToGuess}")
                 .setPositiveButton(getString(R.string.ok)) { _, _ ->
                     clearField()
                 }
@@ -165,8 +155,18 @@ class MainActivity : AppCompatActivity() {
             .setView(etWord)
             .setPositiveButton(getString(R.string.done)) { _, _ ->
                 val text = etWord.text.toString()
-                if (vm.checkWord(text.uppercase())) vm.setWord(text)
+                checkSetWord(text.uppercase())
             }.show()
+    }
+
+    private fun checkSetWord(word: String) {
+        val isWordOk = vm.checkWord(word)
+        if (!isWordOk && currentRoundState!!.wordToGuess.isEmpty()) {
+            makeShortToast(this.getString(R.string.no_such_word_in_dict))
+        } else {
+            vm.setWord(word)
+        }
+
     }
 
     private fun displayCheckResults(checkResult: Map<GuessState, Map<Int, Char>>) {
@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity() {
             when (textKey.label.uppercase().first()) {
                 in checkResult[GuessState.Positionmatch]!!.values -> textKey.setKeyState(
                     GuessState.Positionmatch
-                )//must be last?
+                )
                 in checkResult[GuessState.Charmatch]!!.values -> textKey.setKeyState(
                     GuessState.Charmatch
                 )
@@ -251,6 +251,7 @@ class MainActivity : AppCompatActivity() {
         score1 = findViewById(R.id.player1)
         score2 = findViewById(R.id.player2)
         btnDone = findViewById(R.id.makeWord)
+        btnDone.setOnClickListener { createSetWordDialog() }
     }
 
     private fun setupGuessBoard() {

@@ -1,7 +1,6 @@
 package com.vasilisasycheva.android.wordlefortwo.domain
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -29,16 +28,10 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
     private val currentSState
         get() = _sState.value ?: ScoreState()
 
-    //    val isWin: MutableLiveData<Boolean> = MutableLiveData(false)
-//    val isLost: MutableLiveData<Boolean> = MutableLiveData()
-//    val player1: MutableLiveData<Player> =
-//        MutableLiveData(Player(1, R.color.char_match).apply { isGuessing = true })
-//    val player2: MutableLiveData<Player> = MutableLiveData(Player(2, R.color.position_match))
-//    val checkResult = MutableLiveData<Map<GuessState, MutableMap<Int, Char>>>()
-    val wordCheck: MutableLiveData<Boolean> = MutableLiveData()
+//    val wordCheck: MutableLiveData<Boolean> = MutableLiveData()
 
 
-    private fun updateUiState(update: (curState: RoundState) -> RoundState) {
+    private fun updateRoundState(update: (curState: RoundState) -> RoundState) {
         val updatedState = update(currentRoundState)
         _roundState.value = updatedState
     }
@@ -55,7 +48,7 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
 
 
     fun setWord(s: String) {
-        updateUiState { it.copy(wordToGuess = s.uppercase()) }
+        updateRoundState { it.copy(wordToGuess = s.uppercase()) }
     }
 
     fun squareFocusForward() {
@@ -76,11 +69,13 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun nextRow() {
-        updateGbState {
-            it.copy(
-                currentRow = currentGbState.currentRow + 1,
-                squareInFocus = 0
-            )
+        if (currentGbState.currentRow < 5) {
+            updateGbState {
+                it.copy(
+                    currentRow = currentGbState.currentRow + 1,
+                    squareInFocus = 0
+                )
+            }
         }
     }
 
@@ -93,10 +88,10 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
             .forEachLine {
                 if (result == it.uppercase()) isOk = true
             }
-//        updateState { it.copy(wordCheck = isOk) }
-        wordCheck.value = isOk
-        Log.d(DEBUG_TAG, "word is ok: $isOk")
+        updateRoundState { it.copy(wordCheck = isOk) }
+//        wordCheck.value = isOk
         return isOk
+//        return true
     }
 
     fun checkResult(result: String) {
@@ -129,14 +124,14 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
             GuessState.Positionmatch to posMatch,
             GuessState.Charmatch to charMatch
         )
-        updateUiState {
+        updateRoundState {
             it.copy(checkResult = resultMap)
         }
     }
 
     private fun checkWin(posMatch: Map<Int, Char>) {
         if (posMatch.size == 5) {
-            updateUiState { it.copy(isWin = true) }
+            updateRoundState { it.copy(isWin = true) }
             increaseScore()
             changePlayer()
         }
@@ -144,21 +139,19 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun checkLoss() {
         if (!currentRoundState.isWin && currentGbState.currentRow == 5) {
-            updateUiState { it.copy(isLost = true) }
+            updateRoundState { it.copy(isLost = true) }
         }
     }
 
     private fun changePlayer() {
         when {
             currentSState.player1.isGuessing -> {
-//                player1.value = player1.value!!.copy(isGuessing = false)
                 updateSState {
                     it.copy(
                         player1 = currentSState.player1.copy(isGuessing = false),
                         player2 = currentSState.player2.copy(isGuessing = true)
                     )
                 }
-//                player2.value = player2.value!!.copy(isGuessing = true)
             }
             currentSState.player2.isGuessing -> {
                 updateSState {
@@ -168,10 +161,6 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 }
             }
-//            player2.value!!.isGuessing -> {
-//                player2.value = player2.value!!.copy(isGuessing = false)
-//                updateSState { it.copy(player1 = currentSState.player1.copy(isGuessing = true)) }
-//            }
         }
     }
 
@@ -183,16 +172,12 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
             currentSState.player2.isGuessing -> {
                 updateSState { it.copy(player2 = currentSState.player2.increaseScore()) }
             }
-//            player2.value!!.isGuessing -> {
-//                player2.value!!.score?.let { score ->
-//                    player2.value = player2.value!!.copy(score = score + 1)
-//                }
-//            }
+
         }
     }
 
     private fun resetRound() {
-        updateUiState { RoundState() }
+        updateRoundState { RoundState() }
     }
 
     private fun resetGuessBoard() {
