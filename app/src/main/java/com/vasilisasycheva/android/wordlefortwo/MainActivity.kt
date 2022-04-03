@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         vm.roundState.observe(this) { uiState ->
             currentRoundState = uiState
 
-            isWordSet(uiState.wordToGuess.isNotEmpty())
+//            isWordSet(uiState.wordToGuess.isNotEmpty())
             if (uiState.checkResult.isNotEmpty())
                 displayCheckResults(uiState.checkResult) //? kind of ugly
             displayWin(uiState.isWin)
@@ -166,7 +166,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             vm.setWord(word)
         }
-
     }
 
     private fun displayCheckResults(checkResult: Map<GuessState, Map<Int, Char>>) {
@@ -237,6 +236,7 @@ class MainActivity : AppCompatActivity() {
             val result = getResultString(squareList)
             if (vm.checkWord(result)) {
                 vm.checkResult(result)
+                resultKeys = mutableListOf()
             }
             clearSquareList()
         }
