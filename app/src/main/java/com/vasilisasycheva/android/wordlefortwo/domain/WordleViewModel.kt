@@ -1,6 +1,7 @@
 package com.vasilisasycheva.android.wordlefortwo.domain
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -13,12 +14,12 @@ const val DEBUG_TAG = "wordle_debug"
 
 class WordleViewModel(application: Application) : AndroidViewModel(application) {
 
-    private var _gbState = MutableLiveData(GuessBoardState())
+    private var _gbState = MutableLiveData(GuessBoardState()) // state for square and rows moving
     val gbState: LiveData<GuessBoardState> = _gbState
     private val currentGbState
         get() = _gbState.value ?: GuessBoardState()
 
-    private var _roundState = MutableLiveData(RoundState())
+    private var _roundState = MutableLiveData(RoundState()) //state for win, lose, wordcheck, result display
     val roundState: LiveData<RoundState> = _roundState
     private val currentRoundState
         get() = _roundState.value ?: RoundState()
@@ -27,25 +28,6 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
     val sState: LiveData<ScoreState> = _sState
     private val currentSState
         get() = _sState.value ?: ScoreState()
-
-//    val wordCheck: MutableLiveData<Boolean> = MutableLiveData()
-
-
-    private fun updateRoundState(update: (curState: RoundState) -> RoundState) {
-        val updatedState = update(currentRoundState)
-        _roundState.value = updatedState
-    }
-
-    private fun updateGbState(update: (curState: GuessBoardState) -> GuessBoardState) {
-        val updatedState = update(currentGbState)
-        _gbState.value = updatedState
-    }
-
-    private fun updateSState(update: (curState: ScoreState) -> ScoreState) {
-        val updatedState = update(currentSState)
-        _sState.value = updatedState
-    }
-
 
     fun setWord(s: String) {
         updateRoundState { it.copy(wordToGuess = s.uppercase()) }
@@ -76,10 +58,12 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
                     squareInFocus = 0
                 )
             }
+            updateRoundState { it.copy(checkResult = emptyMap()) }
         }
     }
 
     fun checkWord(result: String): Boolean {
+        /*Checks if the word is in the prepared file with only 5-letter nouns*/
         var isOk = false
         getApplication<Application>()
             .assets
@@ -89,47 +73,54 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
                 if (result == it.uppercase()) isOk = true
             }
         updateRoundState { it.copy(wordCheck = isOk) }
-//        wordCheck.value = isOk
         return isOk
-//        return true
     }
 
     fun checkResult(result: String) {
         checkLetters(result)
-        checkWin(currentRoundState.checkResult[GuessState.Positionmatch]!!)
+        checkWin()
         checkLoss()
         nextRow()
     }
 
     private fun checkLetters(result: String) {
+        /* Creates a map result with postions and status of all the keys,
+        * Indexes matter in Char match case as it could be more than one same letters in the word
+        * Checked letter are replaced so when word contain more that one same char
+        * it will be displayed correctly in the check results*/
         val posMatch: MutableMap<Int, Char> = mutableMapOf()
         val charMatch: MutableMap<Int, Char> = mutableMapOf()
         val miss: MutableMap<Int, Char> = mutableMapOf()
+        var word = currentRoundState.wordToGuess
 
         result.forEachIndexed { ind, char ->
             when (char) {
-                currentRoundState.wordToGuess[ind] -> {
+                word[ind] -> {
                     posMatch[ind] = char
+                    word = word.replaceFirst(char, '1')
                 }
-                in currentRoundState.wordToGuess -> {
+                in word -> {
                     charMatch[ind] = char
+                    word = word.replaceFirst(char, '1')
                 }
-                !in currentRoundState.wordToGuess -> {
+                !in word -> {
                     miss[ind] = char
+                    word = word.replaceFirst(char, '1')
                 }
             }
         }
-        val resultMap = mapOf(
-            GuessState.Miss to miss,
-            GuessState.Positionmatch to posMatch,
-            GuessState.Charmatch to charMatch
-        )
+
         updateRoundState {
-            it.copy(checkResult = resultMap)
+            it.copy(checkResult = mapOf(
+                GuessState.Miss to miss,
+                GuessState.Positionmatch to posMatch,
+                GuessState.Charmatch to charMatch
+            ))
         }
     }
 
-    private fun checkWin(posMatch: Map<Int, Char>) {
+    private fun checkWin() {
+        val posMatch = currentRoundState.checkResult[GuessState.Positionmatch]!!
         if (posMatch.size == 5) {
             updateRoundState { it.copy(isWin = true) }
             increaseScore()
@@ -192,6 +183,21 @@ class WordleViewModel(application: Application) : AndroidViewModel(application) 
     fun endRound() {
         resetRound()
         resetGuessBoard()
+    }
+
+    private fun updateRoundState(update: (curState: RoundState) -> RoundState) {
+        val updatedState = update(currentRoundState)
+        _roundState.value = updatedState
+    }
+
+    private fun updateGbState(update: (curState: GuessBoardState) -> GuessBoardState) {
+        val updatedState = update(currentGbState)
+        _gbState.value = updatedState
+    }
+
+    private fun updateSState(update: (curState: ScoreState) -> ScoreState) {
+        val updatedState = update(currentSState)
+        _sState.value = updatedState
     }
 }
 

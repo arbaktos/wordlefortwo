@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -12,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.children
+import com.vasilisasycheva.android.wordlefortwo.domain.DEBUG_TAG
 import com.vasilisasycheva.android.wordlefortwo.domain.RoundState
 import com.vasilisasycheva.android.wordlefortwo.domain.WordleViewModel
 import com.vasilisasycheva.android.wordlefortwo.extensions.shake
@@ -20,6 +22,8 @@ import com.vasilisasycheva.android.wordlefortwo.ui.keyboard.*
 
 class MainActivity : AppCompatActivity() {
 
+    private val vm: WordleViewModel by viewModels()
+
     lateinit var currentRow: GuessBoard.RowOfSquares
     lateinit var squareInFocus: GuessBoard.Square
     lateinit var guessBoard: GuessBoard
@@ -27,11 +31,10 @@ class MainActivity : AppCompatActivity() {
     lateinit var score1: TextView
     lateinit var score2: TextView
     lateinit var btnDone: AppCompatButton
-    lateinit var enterKey: Keyboard.EnterKey
 
+    lateinit var enterKey: Keyboard.EnterKey
     private var squareInd = 0
     private var resultKeys: MutableList<Keyboard.TextKey> = mutableListOf()
-    private val vm: WordleViewModel by viewModels()
     private var squareList: MutableList<GuessBoard.Square> = mutableListOf()
     private var currentRoundState: RoundState? = null
 
@@ -48,22 +51,24 @@ class MainActivity : AppCompatActivity() {
             checkEnterKeyState()
         }
 
-        vm.roundState.observe(this) { uiState ->
-            currentRoundState = uiState
-
-            isWordSet(uiState.wordToGuess.isNotEmpty())
-            if (uiState.checkResult.isNotEmpty())
-                displayCheckResults(uiState.checkResult) //? kind of ugly
-            displayWin(uiState.isWin)
-            createLoseDialog(uiState.isLost)
-            if (!uiState.wordCheck && uiState.wordToGuess.isNotEmpty()) {
-                currentRow.shake()
-            }
+        vm.roundState.observe(this) { roundState ->
+            currentRoundState = roundState
+            isWordSet(roundState.wordToGuess.isNotEmpty())
+            displayCheckResults(roundState)
+            displayWin(roundState.isWin)
+            createLoseDialog(roundState.isLost)
+            showWordError(roundState)
         }
 
         vm.sState.observe(this) { scoreState ->
             score1.text = scoreState.player1.score.toString()
             score2.text = scoreState.player2.score.toString()
+        }
+    }
+
+    private fun showWordError(roundState: RoundState) {
+        if (!roundState.wordCheck && roundState.wordToGuess.isNotEmpty()) {
+            currentRow.shake()
         }
     }
 
@@ -166,48 +171,53 @@ class MainActivity : AppCompatActivity() {
         } else {
             vm.setWord(word)
         }
-
     }
 
-    private fun displayCheckResults(checkResult: Map<GuessState, Map<Int, Char>>) {
-        resultKeys.forEach { textKey ->
-            when (textKey.label.uppercase().first()) {
-                in checkResult[GuessState.Positionmatch]!!.values -> textKey.setKeyState(
-                    GuessState.Positionmatch
-                )
-                in checkResult[GuessState.Charmatch]!!.values -> textKey.setKeyState(
-                    GuessState.Charmatch
-                )
-                in checkResult[GuessState.Miss]!!.values -> textKey.setKeyState(GuessState.Miss)
+    private fun displayCheckResults(roundState: RoundState) {
+        val checkResult = roundState.checkResult
+        if (!checkResult.isNullOrEmpty()) {
+            resultKeys.forEach { textKey ->
+                when (textKey.label.uppercase().first()) {
+                    in checkResult[GuessState.Positionmatch]!!.values -> textKey.setKeyState(
+                        GuessState.Positionmatch
+                    )
+                    in checkResult[GuessState.Charmatch]!!.values -> textKey.setKeyState(
+                        GuessState.Charmatch
+                    )
+                    in checkResult[GuessState.Miss]!!.values -> textKey.setKeyState(GuessState.Miss)
+                }
             }
-        }
 
-        checkResult[GuessState.Miss]?.let { missMap ->
-            missMap.forEach { (ind, char) ->
-                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
-                    GuessState.Miss
-                )
+            checkResult[GuessState.Miss]?.let { missMap ->
+                missMap.forEach { (ind, char) ->
+                    if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
+                        GuessState.Miss
+                    )
+                }
             }
-        }
 
-        checkResult[GuessState.Charmatch]?.let { charMatchMap ->
-            charMatchMap.forEach { (ind, char) ->
-                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
-                    GuessState.Charmatch
-                )
+            checkResult[GuessState.Charmatch]?.let { charMatchMap ->
+                charMatchMap.forEach { (ind, char) ->
+                    if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
+                        GuessState.Charmatch
+                    )
+                }
             }
-        }
-        checkResult[GuessState.Positionmatch]?.let { posMatchMap ->
-            posMatchMap.forEach { (ind, char) ->
-                if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
-                    GuessState.Positionmatch
-                )
+            checkResult[GuessState.Positionmatch]?.let { posMatchMap ->
+                posMatchMap.forEach { (ind, char) ->
+                    if (squareList[ind].text.toString() == char.toString()) squareList[ind].setSquareStatus(
+                        GuessState.Positionmatch
+                    )
+                }
             }
         }
     }
 
     inner class KeyboardClicksIntImpl : KeyboardClicksInt {
         override fun onTextClick(v: Keyboard.TextKey) {
+            /* Text is placed in current text.
+            * The focus moved forward
+            * TextKey is added to result keys List*/
             if (squareInFocus.text.isNullOrBlank()) {
                 squareInFocus.setText(v.label.uppercase())
                 resultKeys.add(v)
@@ -219,31 +229,42 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onBackspaceClick() {
-            if (squareInd == 0) {
-                squareInFocus.setText("")
-                resultKeys.remove(resultKeys.last())
-            } else if (squareInFocus.text.toString() == "") {
-                vm.squareFocusBackwards()
-                squareInFocus.setText("")
-                resultKeys.remove(resultKeys.last())
-            } else {
-                squareInFocus.setText("")
-                resultKeys.remove(resultKeys.last())
+            /*When deleting the focus on the square shifts.
+            * the resulting list with all key is also modified*/
+            when {
+                squareInd == 0 -> {
+                    squareInFocus.setText("")
+                    resultKeys.remove(resultKeys.last())
+                }
+                squareInFocus.text.toString() == "" -> {
+                    vm.squareFocusBackwards()
+                    squareInFocus.setText("")
+                    resultKeys.remove(resultKeys.last())
+                }
+                else -> {
+                    squareInFocus.setText("")
+                    resultKeys.remove(resultKeys.last())
+                }
             }
         }
 
         override fun onEnterClick() {
+            /*The inserted word is formed from separate squares
+            * if word is passing dictionary check, the word is checked if it's fits the WordTo Guess
+            * list with result Key Text is cleared*/
             currentRow.children.forEach { squareList.add(it as GuessBoard.Square) }
             val result = getResultString(squareList)
             if (vm.checkWord(result)) {
+                Log.d(DEBUG_TAG, "the word is ok: $result")
                 vm.checkResult(result)
+                resultKeys = mutableListOf()
             }
             clearSquareList()
         }
     }
 
     private fun setupKeyboard() {
-        keyBoard = findViewById<Keyboard>(R.id.keyboard_view)
+        keyBoard = findViewById(R.id.keyboard_view)
         keyBoard.setupKeyboardClicks(KeyboardClicksIntImpl())
     }
 

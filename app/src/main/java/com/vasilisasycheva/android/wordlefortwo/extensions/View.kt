@@ -25,11 +25,6 @@ fun View.flipAnimation(keyColor: Int, ct: Context) {
                 R.animator.flip_up
             ) as AnimatorSet
         flipAnimatorSet.setTarget(this)
-//
-//        this.apply {
-//            background = AppCompatResources.getDrawable(ct, keyColor)
-//        }
-
         val backBg = AppCompatResources.getDrawable(ct, keyColor)
         val backgrounds = listOf<Drawable>(this.background, backBg!!)
 
