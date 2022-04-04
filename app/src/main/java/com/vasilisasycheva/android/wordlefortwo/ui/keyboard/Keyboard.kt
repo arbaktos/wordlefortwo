@@ -1,11 +1,8 @@
 package com.vasilisasycheva.android.wordlefortwo.ui.keyboard
 
-import android.animation.AnimatorInflater
-import android.animation.AnimatorSet
 import android.content.Context
 import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.View.MeasureSpec.getSize
@@ -41,10 +38,11 @@ class Keyboard @JvmOverloads constructor(
     }
 
     fun isEnabled(isEnabled: Boolean) {
-        this.children.forEach {
-            it as Row
-            it.children.forEach {
-                it.isEnabled = isEnabled
+        /*Keyboard in enabled only when the row is empty so EnterKey should be disabled by default*/
+        this.children.forEach { row ->
+            row as Row
+            row.children.forEach {
+                if (it !is EnterKey) it.isEnabled = isEnabled
             }
         }
     }
@@ -64,7 +62,7 @@ class Keyboard @JvmOverloads constructor(
             child.measure(
                 widthMeasureSpec,
                 heightMeasureSpec
-            )//View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+            )
             usedHeight += child.measuredHeight + padding
         }
         setMeasuredDimension(widthMeasureSpec, usedHeight)
@@ -108,8 +106,8 @@ class Keyboard @JvmOverloads constructor(
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
             val textKeyNum = letterList.count { it is TextKey }
-            val emptyWidth = width - letterList.size * padding - padding // empty space in a row
-            val gap = emptyWidth - textKeyNum * textButtonWidth
+            val widthMinusPaddings = width - letterList.size * padding - padding // empty space in a row
+            val gap = widthMinusPaddings - textKeyNum * textButtonWidth
             var left = if (gap < padding || children.first() !is TextKey) padding else gap / 2
             val bottom = rowHeight
 
@@ -139,7 +137,7 @@ class Keyboard @JvmOverloads constructor(
         init {
             setOnClickListener(this)
             text = label
-            gravity = Gravity.CENTER
+            gravity = Gravity.CENTER_HORIZONTAL
             setKeyState(GuessState.Default)
             isClickable = true
             elevation = 12f
@@ -149,6 +147,7 @@ class Keyboard @JvmOverloads constructor(
         }
 
         fun setKeyState(guessState: GuessState = GuessState.Default) {
+            /* So animation would be shown only when th game in on not os startup*/
             if (guessState != GuessState.Default) this.flipAnimation(guessState.keyColor, ct)
             else background = AppCompatResources.getDrawable(ct, guessState.keyColor)
         }
@@ -277,23 +276,3 @@ enum class GuessState(val keyColor: Int, val etColor: Int) {
     Charmatch(R.drawable.char_match_bg, R.drawable.et_char_match_bg),
     Miss(R.drawable.miss_bg, R.drawable.et_miss_bg)
 }
-
-//        private fun flipDownAnimation() {
-//            val flipDownAnimationSet =
-//                AnimatorInflater.loadAnimator(
-//                    context,
-//                    R.animator.flip_down
-//                ) as AnimatorSet
-//            flipDownAnimationSet.setTarget(this)
-//            flipDownAnimationSet.start()
-//        }
-//
-//        private fun flipUpAnimation() {
-//            val flipUpAnimatorSet =
-//                AnimatorInflater.loadAnimator(
-//                    context,
-//                    R.animator.flip_up
-//                ) as AnimatorSet
-//            flipUpAnimatorSet.setTarget(this)
-//            flipUpAnimatorSet.start()
-//        }

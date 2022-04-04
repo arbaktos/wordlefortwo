@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.View.MeasureSpec.getSize
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.children
 import com.vasilisasycheva.android.wordlefortwo.R
 import com.vasilisasycheva.android.wordlefortwo.domain.DEBUG_TAG
@@ -106,7 +107,6 @@ class GuessBoard@JvmOverloads constructor(
         override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
             val tSize = height * 0.7f
             textSize = ctx.pixelsToSp(tSize)
-
             super.onLayout(changed, left, top, right, bottom)
         }
 
@@ -117,7 +117,11 @@ class GuessBoard@JvmOverloads constructor(
         }
 
         fun setSquareStatus(guessState: GuessState = GuessState.Default) {
-            this.flipAnimation(guessState.etColor, ctx)
+            if (guessState == GuessState.Default) {
+                background = AppCompatResources.getDrawable(ctx, guessState.etColor)
+            } else {
+                this.flipAnimation(guessState.etColor, ctx)
+            }
         }
     }
 
